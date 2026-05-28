@@ -25,6 +25,9 @@ CFLAGS = $(CXXFLAGS)
 
 PARSE_LDFLAGS = $(shell llvm-config --ldflags --libs symbolize support) -lpthread -ldl -lz -lm -fexceptions
 PARSE_CXXFLAGS = $(shell llvm-config --cxxflags)
+
+$(shell mkdir -p $(BUILD_DIR))
+
 $(BUILD_DIR)/%.o:parse/%.cpp
 	$(CXX) $(PARSE_CXXFLAGS) $(CXXFLAGS) -c -o $@ $< $(PARSE_LDFLAGS) 
 
