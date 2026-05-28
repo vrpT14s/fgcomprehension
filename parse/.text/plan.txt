@@ -1,0 +1,34 @@
+have class that calls its own member functions for the parsing, and then in the inherited thing, in the member func's add the stuff that handles the symbols. Call that class the raw sample manager or whatever. That class will get the raw ip's from the callchains, it'll use its dso memory map set to resolve it to a dso, and then it'll add that to a list of ip's to resolve. After it's done it'll resolve all those ip's for each dso. This way we only need to keep the large dwarf info in memory for a little bit instead of a long time. For symbol resolution I want to use bfd if possible and if it isn't then we can use addr2line. After we get the offset to symbol name + location map, we can then move onto flamegraph processing. In this case I won't sort them and I'll find the unsorted temporal flamegraph, i.e. the flamechart(?).
+
+process_flamechart(sample)
+{
+	close_all = false
+	for (int i = 0; i < max_depth; i++) {
+		if close_all
+		|| current_rect[depth].dso != sample.dso
+		|| current_rect[depth].offset != sample.offset {
+			close_all = true
+			close(current_depth...)
+			open(sample)
+		} else {
+			update(current_rect[depth], sample[depth]);
+		}
+	}
+}
+
+so each sample callchain will just be a list of (dso_id, dso_offset) tuples. Or maybe I should go for dso_base instead? So I don't need to keep track of id's. That sounds nicer just so I can avoid id's.
+
+After we finish this, assuming the close thing outputs to a list of rects, we'll have rects of the form:
+{
+	start_sample = sample num, can also replace by timestamp
+	end_sample = sample num
+	depth: int
+	dso_base: u64
+	dso_offset u64
+}
+
+Now drawing this is simple, simply do a draw rect for each rect with any scaling necessary. And draw the text based on dso_base/offset.
+
+What if we want to merge the rects though? For this it'll be easier if we store parent/children relationships as well. I'll need this for some other operations later. So we'll have a tree for this where each node will have sample counts. Alternatively we could have a graph with functions and then the edges will have sample counts... I was thinking of this before. But that's a little complicated so I won't do it. I could go for a longest prefix match type tree too. And then process all the rects one by one. That sounds good.
+
+I don't need this tree as a start, though, so I'll avoid it. As a temporary measure I can give the option to sort the samples before processing. So you can either have a time view or a merged view but not both at the same time, unless you open both separately and run the app twice. Sounds fine to me for now. I'll see how fast it is.
