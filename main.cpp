@@ -4,6 +4,7 @@
 #include "parse/layout.h"
 
 #include <cmath>
+#include "helper.h"
 
 class Flamegraph: public Application {
 	float f = 0.0f;
@@ -22,49 +23,19 @@ public:
 		perf_data.parse(&consumer);
 		auto process_samples = consumer.samples.begin()->second;
 		rects = Rect::emitRects(process_samples);
+		for (auto rect: rects) {
+			auto data = rect.getSymData();
+			if (!data)
+				continue;
+			//std::cout << rect.depth << '\t' << data->demangled_name << '\n';
+			std::cout << rect.depth << '\t' << data->demangled_name << '\t' << data->path << ':' << data->line << ':' << data->column << '\n';
+		}
 	}
 
-	static inline u32 hash(u64 x, int bias)
-	{
-	    x ^= bias + 0x9e3779b97f4a7c15ULL;
-
-	    x ^= x >> 33;
-	    x *= 0xff51afd7ed558ccdULL;
-	    x ^= x >> 33;
-	    x *= 0xc4ceb9fe1a85ec53ULL;
-	    x ^= x >> 33;
-
-	    return (u32)x ^ (u32)(x >> 32);
-	}
-
-	static inline u32 hash(u64 x, float bias)
-	{
-	    // hash/mix
-	    x ^= x >> 33;
-	    x *= 0xff51afd7ed558ccdULL;
-	    x ^= x >> 33;
-	    x *= 0xc4ceb9fe1a85ec53ULL;
-	    x ^= x >> 33;
-
-	    // base value in [0, 1]
-	    float base = (u32)x / float(0xffffffffu);
-
-	    // smoothly shift with bias
-	    float h = base + bias * 0.05f;
-	    h = h - std::floor(h); // fract()
-
-	    // back to integer
-	    return (u32)(h * 0xffffffffu);
-	}
 
 
 	void draw() override {
 		ImGui::Begin("Flamegraph");
-		//ImGui::Text("num samples - %d", consumer.samples.begin()->second.size());
-		//ImGui::Text("num rects - %d", rects.size());
-		//ImGui::SliderInt("int", &i, 0, 100);
-
-
 		ImVec2 avail_size = ImGui::GetContentRegionAvail();
 		ImVec2 pos = ImGui::GetCursorScreenPos();
 		ImDrawList *drawlist = ImGui::GetWindowDrawList();
@@ -86,7 +57,16 @@ public:
 			drawlist->AddRectFilled(
 				{pos.x + start, pos.y + std::round(depth_start)},
 				{pos.x + end,   pos.y + std::round(depth_end)},
-				hash((u64)(rect.mmap ? rect.mmap->dso : NULL), bias), 1.0f);
+				//hash((u64)(rect.mmap ? rect.mmap->dso : NULL), bias), 1.0f);
+				hash((u64)((rect.mmap ? rect.mmap->dso : NULL) + rect.sym), bias), 1.0f);
+			auto data = rect.getSymData();
+			if (!data)
+				continue;
+			drawRectLabel(drawlist, 
+				{pos.x + start, pos.y + std::round(depth_start)},
+				{pos.x + end,   pos.y + std::round(depth_end)},
+				data->demangled_name.c_str()
+			);
 			//printf("start=%f end=%f depth=%d\n", rect.start, rect.end, rect.depth);
 			//printf("(%f, %f), (%f, %f)\n", start, depth_start, end, depth_end);
 		}

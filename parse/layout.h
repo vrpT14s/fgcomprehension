@@ -21,5 +21,12 @@ public:
 		this->end = end;	
 	}
 
+	SymbolData *getSymData() {
+		if (!mmap || !mmap->dso)
+			return NULL;
+		return &mmap->dso->sym_cache[sym];
+
+	}
+
 	static std::vector<Rect> emitRects(std::vector<Sample> samples);
 };

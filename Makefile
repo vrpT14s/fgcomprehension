@@ -4,7 +4,7 @@
 EXE = main
 IMGUI_DIR = ./imgui
 BUILD_DIR= ./build
-SOURCES = main.cpp 
+SOURCES = main.cpp
 SOURCES += app/application.cpp
 SOURCES += parse/perfdata.cpp parse/eventconsumer.cpp parse/layout.cpp
 SOURCES += $(IMGUI_DIR)/imgui.cpp $(IMGUI_DIR)/imgui_demo.cpp $(IMGUI_DIR)/imgui_draw.cpp $(IMGUI_DIR)/imgui_tables.cpp $(IMGUI_DIR)/imgui_widgets.cpp

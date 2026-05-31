@@ -36,8 +36,8 @@ class SymbolData {
 public:
 	std::string demangled_name;
 	std::string path;
-	u32 line;
-	u32 column;
+	u32 line = 0;
+	u32 column = 0;
 };
 
 class Dso {
